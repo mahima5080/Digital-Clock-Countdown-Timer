@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Clock & New Year Countdown</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            min-height: 100vh;
+        }
+
+        .digital-font {
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 0.05em;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .glow-text-cyan {
+            text-shadow: 0 0 20px rgba(6, 182, 212, 0.6), 0 0 40px rgba(6, 182, 212, 0.2);
+        }
+
+        .glow-text-purple {
+            text-shadow: 0 0 20px rgba(168, 85, 247, 0.6), 0 0 40px rgba(168, 85, 247, 0.2);
+        }
+
+        .glow-box-cyan {
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.25);
+        }
+
+        .tab-active {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+        }
+    </style>
+</head>
+<body class="text-slate-100 flex flex-col justify-between p-4 sm:p-6 lg:p-8 selection:bg-cyan-500 selection:text-white">
+
+    <!-- Header Navigation & Controls -->
+    <header class="max-w-4xl mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 sm:mb-10">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/30">
+                <i class="fa-solid fa-clock text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-white tracking-wide">Chronos App</h1>
+                <p class="text-xs text-slate-400">Digital Clock & Countdown Utility</p>
+            </div>
+        </div>
+
+        <!-- Mode Toggle Tabs -->
+        <div class="flex bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800 backdrop-blur-md">
+            <button id="tab-clock" onclick="switchMode('clock')" class="tab-active px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2">
+                <i class="fa-regular fa-clock"></i>
+                <span>Live Clock</span>
+            </button>
+            <button id="tab-countdown" onclick="switchMode('countdown')" class="px-5 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-white transition-all duration-300 flex items-center gap-2">
+                <i class="fa-solid fa-hourglass-half"></i>
+                <span>New Year 2027</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Content Container -->
+    <main class="max-w-4xl mx-auto w-full my-auto">
+        
+        <!-- SECTION 1: LIVE DIGITAL CLOCK -->
+        <div id="clock-view" class="glass-panel rounded-3xl p-6 sm:p-12 text-center relative overflow-hidden transition-all duration-500">
+            <!-- Decorative Ambient Glow -->
+            <div class="absolute -top-24 -left-24 w-60 h-60 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -right-24 w-60 h-60 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Date & Day Info -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6 text-slate-300">
+                <span id="current-day" class="px-4 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/60 text-xs sm:text-sm font-semibold tracking-wider text-cyan-400 uppercase">--</span>
+                <span id="current-date" class="text-sm sm:text-base font-medium text-slate-300">--</span>
+            </div>
+
+            <!-- Digital Time Display -->
+            <div class="my-6 sm:my-8 py-4">
+                <div class="digital-font text-4xl sm:text-7xl lg:text-8xl font-black text-cyan-400 glow-text-cyan tracking-wider flex items-center justify-center gap-2 sm:gap-4">
+                    <span id="hours">00</span>
+                    <span class="animate-pulse text-slate-500">:</span>
+                    <span id="minutes">00</span>
+                    <span class="animate-pulse text-slate-500">:</span>
+                    <span id="seconds">00</span>
+                    <span id="ampm" class="text-lg sm:text-3xl font-bold text-slate-400 ml-2 sm:ml-4 tracking-normal">AM</span>
+                </div>
+            </div>
+
+            <!-- Format Switch Controls -->
+            <div class="mt-8 pt-6 border-t border-slate-800/80 flex flex-wrap items-center justify-center gap-4">
+                <span class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Time Format:</span>
+                <button id="btn-12h" onclick="toggleFormat(false)" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-cyan-500 text-white shadow-md transition-all">12-Hour (AM/PM)</button>
+                <button id="btn-24h" onclick="toggleFormat(true)" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:text-white transition-all">24-Hour</button>
+            </div>
+        </div>
+
+        <!-- SECTION 2: NEW YEAR COUNTDOWN TIMER -->
+        <div id="countdown-view" class="hidden glass-panel rounded-3xl p-6 sm:p-12 text-center relative overflow-hidden transition-all duration-500">
+            <!-- Decorative Ambient Glow -->
+            <div class="absolute -top-24 -right-24 w-60 h-60 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="space-y-2 mb-8">
+                <span class="px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-xs sm:text-sm font-semibold tracking-wider text-purple-400 uppercase">
+                    <i class="fa-solid fa-sparkles mr-1"></i> Target Event
+                </span>
+                <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">Countdown to New Year <span id="target-year" class="text-purple-400">2027</span></h2>
+                <p class="text-xs sm:text-sm text-slate-400">Time remaining until January 1st Midnight</p>
+            </div>
+
+            <!-- Countdown Timer Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 max-w-2xl mx-auto my-6">
+                <!-- Days Card -->
+                <div class="bg-slate-900/90 border border-slate-800 p-4 sm:p-6 rounded-2xl flex flex-col items-center justify-center hover:border-purple-500/50 transition-all">
+                    <span id="cd-days" class="digital-font text-3xl sm:text-5xl font-extrabold text-purple-400 glow-text-purple">000</span>
+                    <span class="text-xs text-slate-400 font-semibold uppercase mt-2 tracking-wider">Days</span>
+                </div>
+
+                <!-- Hours Card -->
+                <div class="bg-slate-900/90 border border-slate-800 p-4 sm:p-6 rounded-2xl flex flex-col items-center justify-center hover:border-purple-500/50 transition-all">
+                    <span id="cd-hours" class="digital-font text-3xl sm:text-5xl font-extrabold text-purple-400 glow-text-purple">00</span>
+                    <span class="text-xs text-slate-400 font-semibold uppercase mt-2 tracking-wider">Hours</span>
+                </div>
+
+                <!-- Minutes Card -->
+                <div class="bg-slate-900/90 border border-slate-800 p-4 sm:p-6 rounded-2xl flex flex-col items-center justify-center hover:border-purple-500/50 transition-all">
+                    <span id="cd-minutes" class="digital-font text-3xl sm:text-5xl font-extrabold text-purple-400 glow-text-purple">00</span>
+                    <span class="text-xs text-slate-400 font-semibold uppercase mt-2 tracking-wider">Minutes</span>
+                </div>
+
+                <!-- Seconds Card -->
+                <div class="bg-slate-900/90 border border-slate-800 p-4 sm:p-6 rounded-2xl flex flex-col items-center justify-center hover:border-purple-500/50 transition-all">
+                    <span id="cd-seconds" class="digital-font text-3xl sm:text-5xl font-extrabold text-purple-400 glow-text-purple">00</span>
+                    <span class="text-xs text-slate-400 font-semibold uppercase mt-2 tracking-wider">Seconds</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="max-w-4xl mx-auto w-full text-center mt-6 sm:mt-10 pt-4 border-t border-slate-800/60 text-slate-500 text-xs">
+        <p>Built for Web Development Internship — Week 2 Assignment | JS Date() & setInterval()</p>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // State Management
+        let is24HourFormat = false;
+
+        // Element References
+        const clockView = document.getElementById('clock-view');
+        const countdownView = document.getElementById('countdown-view');
+        const tabClock = document.getElementById('tab-clock');
+        const tabCountdown = document.getElementById('tab-countdown');
+
+        const hoursEl = document.getElementById('hours');
+        const minutesEl = document.getElementById('minutes');
+        const secondsEl = document.getElementById('seconds');
+        const ampmEl = document.getElementById('ampm');
+        const dayEl = document.getElementById('current-day');
+        const dateEl = document.getElementById('current-date');
+
+        const btn12h = document.getElementById('btn-12h');
+        const btn24h = document.getElementById('btn-24h');
+
+        const cdDays = document.getElementById('cd-days');
+        const cdHours = document.getElementById('cd-hours');
+        const cdMinutes = document.getElementById('cd-minutes');
+        const cdSeconds = document.getElementById('cd-seconds');
+        const targetYearEl = document.getElementById('target-year');
+
+        // Helper to pad single digits with leading zero
+        function padZero(num) {
+            return num < 10 ? '0' + num : num;
+        }
+
+        // 1. UPDATE DIGITAL CLOCK
+        function updateClock() {
+            const now = new Date();
+
+            // Date & Day formatting
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            dayEl.textContent = days[now.getDay()];
+            dateEl.textContent = `${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+
+            // Time formatting
+            let hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            let ampm = '';
+
+            if (!is24HourFormat) {
+                ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12; // convert '0' to '12'
+                ampmEl.style.display = 'inline';
+                ampmEl.textContent = ampm;
+            } else {
+                ampmEl.style.display = 'none';
+            }
+
+            hoursEl.textContent = padZero(hours);
+            minutesEl.textContent = padZero(minutes);
+            secondsEl.textContent = padZero(seconds);
+        }
+
+        // 2. UPDATE COUNTDOWN TIMER TO NEW YEAR
+        function updateCountdown() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const nextYear = currentYear + 1;
+            const newYearTime = new Date(`January 1, ${nextYear} 00:00:00`).getTime();
+            
+            targetYearEl.textContent = nextYear;
+
+            const diff = newYearTime - now.getTime();
+
+            if (diff > 0) {
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                cdDays.textContent = days < 100 ? padZero(days) : days;
+                cdHours.textContent = padZero(hours);
+                cdMinutes.textContent = padZero(minutes);
+                cdSeconds.textContent = padZero(seconds);
+            } else {
+                cdDays.textContent = '00';
+                cdHours.textContent = '00';
+                cdMinutes.textContent = '00';
+                cdSeconds.textContent = '00';
+            }
+        }
+
+        // 3. MODE SWITCHING FUNCTION
+        function switchMode(mode) {
+            if (mode === 'clock') {
+                clockView.classList.remove('hidden');
+                countdownView.classList.add('hidden');
+                tabClock.className = 'tab-active px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2';
+                tabCountdown.className = 'px-5 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-white transition-all duration-300 flex items-center gap-2';
+            } else {
+                clockView.classList.add('hidden');
+                countdownView.classList.remove('hidden');
+                tabCountdown.className = 'tab-active px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2';
+                tabClock.className = 'px-5 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-white transition-all duration-300 flex items-center gap-2';
+            }
+        }
+
+        // 4. FORMAT TOGGLE (12H / 24H)
+        function toggleFormat(is24H) {
+            is24HourFormat = is24H;
+            if (is24H) {
+                btn24h.className = 'px-4 py-1.5 rounded-lg text-xs font-bold bg-cyan-500 text-white shadow-md transition-all';
+                btn12h.className = 'px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:text-white transition-all';
+            } else {
+                btn12h.className = 'px-4 py-1.5 rounded-lg text-xs font-bold bg-cyan-500 text-white shadow-md transition-all';
+                btn24h.className = 'px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:text-white transition-all';
+            }
+            updateClock();
+        }
+
+        // INITIALIZE TIMERS
+        updateClock();
+        updateCountdown();
+
+        // RUN INTERVALS EVERY SECOND (1000ms)
+        setInterval(updateClock, 1000);
+        setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html>
